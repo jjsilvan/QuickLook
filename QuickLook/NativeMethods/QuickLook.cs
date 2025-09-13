@@ -53,11 +53,25 @@ internal static class QuickLook
         CallingConvention = CallingConvention.Cdecl)]
     private static extern void GetCurrentSelectionNative_64([MarshalAs(UnmanagedType.LPWStr)] StringBuilder sb);
 
+    [DllImport("QuickLook.NativeArm64.dll", EntryPoint = "Init",
+        CallingConvention = CallingConvention.Cdecl)]
+    private static extern void Init_arm64();
+
+    [DllImport("QuickLook.NativeArm64.dll", EntryPoint = "GetFocusedWindowType",
+        CallingConvention = CallingConvention.Cdecl)]
+    private static extern FocusedWindowType GetFocusedWindowTypeNative_arm64();
+
+    [DllImport("QuickLook.NativeArm64.dll", EntryPoint = "GetCurrentSelection",
+        CallingConvention = CallingConvention.Cdecl)]
+    private static extern void GetCurrentSelectionNative_arm64([MarshalAs(UnmanagedType.LPWStr)] StringBuilder sb);
+
     internal static void Init()
     {
         try
         {
-            if (App.Is64Bit)
+            if (App.IsArm64)
+                Init_arm64();
+            else if (App.Is64Bit)
                 Init_64();
             else
                 Init_32();
@@ -72,7 +86,10 @@ internal static class QuickLook
     {
         try
         {
-            return App.Is64Bit ? GetFocusedWindowTypeNative_64() : GetFocusedWindowTypeNative_32();
+            if (App.IsArm64)
+                return GetFocusedWindowTypeNative_arm64();
+            else
+                return App.Is64Bit ? GetFocusedWindowTypeNative_64() : GetFocusedWindowTypeNative_32();
         }
         catch (Exception e)
         {
@@ -89,7 +106,9 @@ internal static class QuickLook
         {
             try
             {
-                if (App.Is64Bit)
+                if (App.IsArm64)
+                    GetCurrentSelectionNative_arm64(sb);
+                else if (App.Is64Bit)
                     GetCurrentSelectionNative_64(sb);
                 else
                     GetCurrentSelectionNative_32(sb);
