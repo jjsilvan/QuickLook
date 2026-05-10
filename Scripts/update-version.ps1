@@ -6,7 +6,7 @@ $text = @"
  
 using System.Reflection;
  
-[assembly: AssemblyVersion("$tag")]
+[assembly: AssemblyVersion("4.5.0")]
 [assembly: AssemblyInformationalVersion("$revision")]
 "@
 

@@ -22,15 +22,17 @@ using QuickLook.Common.Plugin;
 using System;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Windows;
 
 namespace QuickLook.Plugin.VideoViewer;
 
 public sealed class Plugin : IViewer
 {
-    private static readonly MediaInfoLib _mediaInfo;
+    private static MediaInfoLib _mediaInfo;
 
     private ViewerPanel _vp;
+    private static readonly bool isArm64 = RuntimeInformation.ProcessArchitecture == Architecture.Arm64;
 
     public int Priority => -3;
 
@@ -38,17 +40,13 @@ public sealed class Plugin : IViewer
     {
         _mediaInfo = new MediaInfoLib(Path.Combine(
             Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
-            Environment.Is64BitProcess ? @"MediaInfo-x64\" : @"MediaInfo-x86\"));
+            isArm64 ? @"MediaInfo-arm64\" : Environment.Is64BitProcess ? @"MediaInfo-x64\" : @"MediaInfo-x86\"));
         _mediaInfo.Option("Cover_Data", "base64");
     }
 
     public void Init()
     {
-        // Remove legacy LAV hardware acceleration settings
-        // https://github.com/QL-Win/QuickLook/issues/1928
-#if false
         QLVRegistry.Register();
-#endif
     }
 
     public bool CanHandle(string path)
@@ -132,8 +130,10 @@ public sealed class Plugin : IViewer
         context.ViewerContent = _vp;
 
         context.Title = $"{Path.GetFileName(path)}";
-
-        _vp.LoadAndPlay(path, _mediaInfo);
+        if (isArm64)
+            _vp.LoadAndPlayWPF(path, _mediaInfo);
+        else
+            _vp.LoadAndPlay(path, _mediaInfo);
     }
 
     public void Cleanup()
